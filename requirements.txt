@@ -1,0 +1,17 @@
+# PyTorch
+torch
+torchvision
+
+# Data / ML
+numpy
+scikit-learn
+pandas
+matplotlib
+Pillow
+
+# NLP **NEW**
+tokenizers
+
+# Utilities
+tqdm
+wandb
