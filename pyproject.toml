@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name="FL-IIoT"
+version="0.0.1"
+authors=[
+    { name = "Aidan Gatenbee", email="aidan.gatenbee.1@us.af.mil"},
+]
+description="Exploring Federated Learning on Industrial IoT data"
+readme="README.md"
+classifiers=[
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent"
+]
+dependencies=[
+    "torch",
+    "torchvision",
+    "flwr",
+    "numpy",
+    "scikit-learn",
+    "pandas",
+    "matplotlib",
+    "tqdm",
+    "wandb",
+    "kagglehub",
+]

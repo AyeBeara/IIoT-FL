@@ -360,6 +360,25 @@ def _make_json_serializable(obj):
     else:
         return obj
 
+def get_predictions(model: nn.Module, dataloader, device) -> tuple:
+    """
+    Run *model* over every batch in *dataloader* and collect predictions.
+
+    :param model: Trained PyTorch model
+    :param dataloader: DataLoader to iterate over
+    :param device: Device the model lives on
+    :return: ``(y_true, y_pred)`` as numpy arrays
+    """
+    model.eval()
+    all_preds, all_labels = [], []
+    with torch.no_grad():
+        for inputs, labels in dataloader:
+            outputs = model(inputs.to(device))
+            _, predicted = outputs.max(1)
+            all_preds.extend(predicted.cpu().numpy())
+            all_labels.extend(labels.numpy())
+    return np.array(all_labels), np.array(all_preds)
+
 def visualize_results(
     y_true: np.ndarray,
     y_pred: np.ndarray,
