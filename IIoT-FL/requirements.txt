@@ -2,6 +2,7 @@
 torch
 torchvision
 flwr
+flwr[simulation]
 
 # Data / ML
 numpy

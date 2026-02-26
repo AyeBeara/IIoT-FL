@@ -3,7 +3,10 @@
 
 logs/
 .env
+.vscode/
 
 data/*
 !data/.gitkeep
 wandb/
+
+quickstart-pytorch/*
