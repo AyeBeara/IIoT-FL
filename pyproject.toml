@@ -18,6 +18,8 @@ dependencies=[
     "torch",
     "torchvision",
     "flwr",
+    "flwr[simulation]",
+    "pytorch_tabular[extra]"
     "numpy",
     "scikit-learn",
     "pandas",
@@ -32,23 +34,42 @@ license="Apache-2.0"
 publisher="Aidan Gatenbee"
 
 [tool.flwr.app.components]
-serverapp="iiotfl.server:app"
-clientapp="iiotfl.client:app"
+serverapp="iiot_fl.server:app"
+clientapp="iiot_fl.client:app"
 
 [tool.flwr.app.config]
-model-type="dsb-trunking"
-input-dim=18
-bottleneck=64
-hidden-dim=128
-head-dim=64
-dropout=0.35
-num-server-rounds=5
-fraction-evaluate=0.2
-local-epochs=1
-learning-rate=0.002
-batch-size=32
-dropout=0.35
+num-server-rounds=50
+fraction-train=1.0
+fraction-evaluate=1.0
+min-train-clients=3
+min-evaluate-clients=3
+min-available-clients=3
 
-[tool.flwr.app.metadata]
-wandb-project-name="FL-IIoT"
-run-name="DSB-Trunking"
+model.input-dim=18
+model.d-token=64
+model.n-blocks=4
+model.attention-heads=8
+model.dropout=0.1
+model.ffn-dim-multiplier=2
+
+train.local-epochs=3
+train.batch-size=512
+train.lr=3e-4
+train.weight-decay=1e-5
+train-rul-loss-weight=1.0
+train.failure-loss-weight=2.0
+train.scheduler="cosine"
+
+strategy.name="FedAdam"
+strategy.server-lr=1e-3
+strategy.server-momentum=0.9
+strategy.tau=1e-4
+
+data.data-dir=/data
+
+[tool.flwr.federation]
+options.num-supernodes=6
+
+[tool.flwr.federation.options.backend.client-resources]
+num-cpus=2
+num-gpus=0.0

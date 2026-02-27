@@ -3,14 +3,18 @@ torch
 torchvision
 flwr
 flwr[simulation]
+pytorch_tabular[extra]
+
 
 # Data / ML
 numpy
 scikit-learn
 pandas
 matplotlib
+optuna
 
 # Utilities
 tqdm
 wandb
 kagglehub
+pyyaml
