@@ -28,7 +28,13 @@ FEATURES = [
     "AI_Supervision",
     "Error_Codes_Last_30_Days",
     "AI_Override_Events",
+    "Laser_Intensity",
+    "Hydraulic_Pressure_bar",
+    "Coolant_Flow_L_min",
+    "Heat_Index",
 ]
+
+INPUT_DIM = len(FEATURES)
 
 def preprocess_partition(df: pd.DataFrame) -> pd.DataFrame:
     # Drop 0-value columns
@@ -104,7 +110,7 @@ class IoTDataset(Dataset):
     def __getitem__(self, idx):
         return self.x[idx], self.rul[idx], self.failure[idx]
     
-def load_partitioner(
+def load_partition(
         data_dir:       str,
         machine_type:   str,
         batch_size:     int = 512,

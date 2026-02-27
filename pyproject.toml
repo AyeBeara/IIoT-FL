@@ -39,9 +39,9 @@ clientapp="iiot_fl.client:app"
 
 [tool.flwr.app.config]
 num-server-rounds=50
-fraction-train=1.0
+fraction-fit=1.0
 fraction-evaluate=1.0
-min-train-clients=3
+min-fit-clients=3
 min-evaluate-clients=3
 min-available-clients=3
 
