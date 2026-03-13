@@ -1,0 +1,1573 @@
+services:
+  superlink:
+    image: flwr/superlink:1.26.1
+    command:
+    - --insecure
+    - --isolation
+    - process
+    ports:
+    - 9093:9093
+  superexec-serverapp:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    command:
+    - --insecure
+    - --plugin-type
+    - serverapp
+    - --appio-api-address
+    - superlink:9091
+    restart: on-failure:3
+    depends_on:
+    - superlink
+  supernode_3d_printer:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9094
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='3d_printer'
+    depends_on:
+    - superlink
+  superexec-clientapp_3d_printer:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/3D_Printer ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_3d_printer:9094
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_3d_printer
+  supernode_agv:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9095
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='agv'
+    depends_on:
+    - superlink
+  superexec-clientapp_agv:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/AGV ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_agv:9095
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_agv
+  supernode_automated_screwdriver:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9096
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='automated_screwdriver'
+    depends_on:
+    - superlink
+  superexec-clientapp_automated_screwdriver:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Automated_Screwdriver ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_automated_screwdriver:9096
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_automated_screwdriver
+  supernode_boiler:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9097
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='boiler'
+    depends_on:
+    - superlink
+  superexec-clientapp_boiler:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Boiler ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_boiler:9097
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_boiler
+  supernode_cmm:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9098
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='cmm'
+    depends_on:
+    - superlink
+  superexec-clientapp_cmm:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/CMM ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_cmm:9098
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_cmm
+  supernode_cnc_lathe:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9099
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='cnc_lathe'
+    depends_on:
+    - superlink
+  superexec-clientapp_cnc_lathe:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/CNC_Lathe ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_cnc_lathe:9099
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_cnc_lathe
+  supernode_cnc_mill:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9100
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='cnc_mill'
+    depends_on:
+    - superlink
+  superexec-clientapp_cnc_mill:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/CNC_Mill ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_cnc_mill:9100
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_cnc_mill
+  supernode_carton_former:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9101
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='carton_former'
+    depends_on:
+    - superlink
+  superexec-clientapp_carton_former:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Carton_Former ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_carton_former:9101
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_carton_former
+  supernode_compressor:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9102
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='compressor'
+    depends_on:
+    - superlink
+  superexec-clientapp_compressor:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Compressor ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_compressor:9102
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_compressor
+  supernode_conveyor_belt:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9103
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='conveyor_belt'
+    depends_on:
+    - superlink
+  superexec-clientapp_conveyor_belt:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Conveyor_Belt ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_conveyor_belt:9103
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_conveyor_belt
+  supernode_crane:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9104
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='crane'
+    depends_on:
+    - superlink
+  superexec-clientapp_crane:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Crane ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_crane:9104
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_crane
+  supernode_dryer:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9105
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='dryer'
+    depends_on:
+    - superlink
+  superexec-clientapp_dryer:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Dryer ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_dryer:9105
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_dryer
+  supernode_forklift_electric:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9106
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='forklift_electric'
+    depends_on:
+    - superlink
+  superexec-clientapp_forklift_electric:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Forklift_Electric ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_forklift_electric:9106
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_forklift_electric
+  supernode_furnace:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9107
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='furnace'
+    depends_on:
+    - superlink
+  superexec-clientapp_furnace:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Furnace ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_furnace:9107
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_furnace
+  supernode_grinder:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9108
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='grinder'
+    depends_on:
+    - superlink
+  superexec-clientapp_grinder:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Grinder ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_grinder:9108
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_grinder
+  supernode_heat_exchanger:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9109
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='heat_exchanger'
+    depends_on:
+    - superlink
+  superexec-clientapp_heat_exchanger:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Heat_Exchanger ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_heat_exchanger:9109
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_heat_exchanger
+  supernode_hydraulic_press:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9110
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='hydraulic_press'
+    depends_on:
+    - superlink
+  superexec-clientapp_hydraulic_press:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Hydraulic_Press ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_hydraulic_press:9110
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_hydraulic_press
+  supernode_industrial_chiller:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9111
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='industrial_chiller'
+    depends_on:
+    - superlink
+  superexec-clientapp_industrial_chiller:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Industrial_Chiller ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_industrial_chiller:9111
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_industrial_chiller
+  supernode_injection_molder:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9112
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='injection_molder'
+    depends_on:
+    - superlink
+  superexec-clientapp_injection_molder:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Injection_Molder ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_injection_molder:9112
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_injection_molder
+  supernode_labeler:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9113
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='labeler'
+    depends_on:
+    - superlink
+  superexec-clientapp_labeler:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Labeler ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_labeler:9113
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_labeler
+  supernode_laser_cutter:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9114
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='laser_cutter'
+    depends_on:
+    - superlink
+  superexec-clientapp_laser_cutter:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Laser_Cutter ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_laser_cutter:9114
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_laser_cutter
+  supernode_mixer:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9115
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='mixer'
+    depends_on:
+    - superlink
+  superexec-clientapp_mixer:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Mixer ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_mixer:9115
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_mixer
+  supernode_palletizer:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9116
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='palletizer'
+    depends_on:
+    - superlink
+  superexec-clientapp_palletizer:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Palletizer ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_palletizer:9116
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_palletizer
+  supernode_pick_and_place:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9117
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='pick_and_place'
+    depends_on:
+    - superlink
+  superexec-clientapp_pick_and_place:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Pick_and_Place ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_pick_and_place:9117
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_pick_and_place
+  supernode_press_brake:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9118
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='press_brake'
+    depends_on:
+    - superlink
+  superexec-clientapp_press_brake:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Press_Brake ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_press_brake:9118
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_press_brake
+  supernode_pump:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9119
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='pump'
+    depends_on:
+    - superlink
+  superexec-clientapp_pump:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Pump ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_pump:9119
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_pump
+  supernode_robot_arm:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9120
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='robot_arm'
+    depends_on:
+    - superlink
+  superexec-clientapp_robot_arm:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Robot_Arm ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_robot_arm:9120
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_robot_arm
+  supernode_shrink_wrapper:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9121
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='shrink_wrapper'
+    depends_on:
+    - superlink
+  superexec-clientapp_shrink_wrapper:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Shrink_Wrapper ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_shrink_wrapper:9121
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_shrink_wrapper
+  supernode_shuttle_system:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9122
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='shuttle_system'
+    depends_on:
+    - superlink
+  superexec-clientapp_shuttle_system:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Shuttle_System ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_shuttle_system:9122
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_shuttle_system
+  supernode_vacuum_packer:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9123
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='vacuum_packer'
+    depends_on:
+    - superlink
+  superexec-clientapp_vacuum_packer:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Vacuum_Packer ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_vacuum_packer:9123
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_vacuum_packer
+  supernode_valve_controller:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9124
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='valve_controller'
+    depends_on:
+    - superlink
+  superexec-clientapp_valve_controller:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Valve_Controller ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_valve_controller:9124
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_valve_controller
+  supernode_vision_system:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9125
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='vision_system'
+    depends_on:
+    - superlink
+  superexec-clientapp_vision_system:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/Vision_System ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_vision_system:9125
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_vision_system
+  supernode_xray_inspector:
+    image: flwr/supernode:1.26.1
+    command:
+    - --insecure
+    - --superlink
+    - superlink:9092
+    - --clientappio-api-address
+    - 0.0.0.0:9126
+    - --isolation
+    - process
+    - --node-config
+    - machine-type='xray_inspector'
+    depends_on:
+    - superlink
+  superexec-clientapp_xray_inspector:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM flwr/superexec:1.26.1
+
+        # gcc is required for the fastai quickstart example
+        USER root
+        RUN apt-get update \
+            && apt-get -y --no-install-recommends install \
+            build-essential \
+            && rm -rf /var/lib/apt/lists/*
+        USER app
+
+        WORKDIR /app
+        COPY --chown=app:app pyproject.toml README.md LICENSE data/XRay_Inspector ./
+        RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
+          && python -m pip install -U --no-cache-dir .
+
+        ENTRYPOINT ["flower-superexec"]
+    command:
+    - --insecure
+    - --plugin-type
+    - clientapp
+    - --appio-api-address
+    - supernode_xray_inspector:9126
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+    stop_signal: SIGINT
+    depends_on:
+    - supernode_xray_inspector

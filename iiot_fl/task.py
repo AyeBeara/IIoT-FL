@@ -105,7 +105,11 @@ def evaluate(
             rul_pred, fail_logit = model(x)
             loss, _, _ = criterion(rul_pred, rul_true, fail_logit, fail_true)
 
-            rul_mae += torch.abs(rul_pred.squeeze() - rul_true).sum().item()
+            rul_mae += (
+                torch.abs(torch.log1p(rul_pred.squeeze()) - torch.log1p(rul_true))
+                .sum()
+                .item()
+            )
 
             preds = (torch.sigmoid(fail_logit.squeeze()) > 0.5).long()
             gt = fail_true.long()
@@ -120,7 +124,7 @@ def evaluate(
     f1 = 2 * precision * recall / max(precision + recall, 1e-8)
 
     metrics = {
-        "rul_mae": rul_mae / n,
+        "rul_mae_log": rul_mae / n,
         "fail_accuracy": (tp + tn) / n,
         "fail_f1": f1,
         "fail_precision": precision,
@@ -128,9 +132,9 @@ def evaluate(
     }
 
     logger.info(
-        "  Eval | loss=%.4f | rul_mae=%.4f | fail_acc=%.4f | faill_f1=%.4f",
+        "  Eval | loss=%.4f | rul_mae_log=%.4f | fail_acc=%.4f | fail_f1=%.4f",
         total_loss / n,
-        metrics["rul_mae"],
+        metrics["rul_mae_log"],
         metrics["fail_accuracy"],
         metrics["fail_f1"],
     )
