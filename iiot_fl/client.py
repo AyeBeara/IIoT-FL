@@ -8,7 +8,13 @@ from flwr.common import Context
 from iiot_fl.config import build_model_config, build_train_config
 from iiot_fl.dataset import INPUT_DIM, load_partition
 from iiot_fl.model import IIoTFLNet, DualTaskLoss
-from iiot_fl.task import get_parameters, set_parameters, train, evaluate
+from iiot_fl.task import (
+    append_metrics_to_csv,
+    evaluate,
+    get_parameters,
+    set_parameters,
+    train,
+)
 
 MACHINE_TYPES = [
     "Furnace",
@@ -61,6 +67,7 @@ class Client(NumPyClient):
         device: torch.device,
         local_epochs: int,
         machine_type: str,
+        metrics_dir: str | None,
     ):
         self.model = model
         self.train_loader = train_loader
@@ -71,6 +78,7 @@ class Client(NumPyClient):
         self.device = device
         self.local_epochs = local_epochs
         self.machine_type = machine_type
+        self.metrics_dir = metrics_dir
 
     def get_parameters(self, config: dict) -> list:
         return get_parameters(self.model)
@@ -97,6 +105,18 @@ class Client(NumPyClient):
         )
 
         num_samples = len(self.train_loader.dataset)
+        round_num = int(config.get("server_round", -1))
+
+        append_metrics_to_csv(
+            metrics_dir=self.metrics_dir,
+            machine_type=self.machine_type,
+            phase="fit",
+            round_num=round_num,
+            num_samples=num_samples,
+            loss=float(metrics["avg_loss"]),
+            metrics=metrics,
+        )
+
         logger.info(
             "[%s] fit complete | samples=%d | loss=%.4f",
             self.machine_type,
@@ -111,6 +131,17 @@ class Client(NumPyClient):
 
         loss, num_samples, metrics = evaluate(
             self.model, self.val_loader, self.criterion, self.device
+        )
+        round_num = int(config.get("server_round", -1))
+
+        append_metrics_to_csv(
+            metrics_dir=self.metrics_dir,
+            machine_type=self.machine_type,
+            phase="evaluate",
+            round_num=round_num,
+            num_samples=num_samples,
+            loss=loss,
+            metrics=metrics,
         )
 
         logger.info(
@@ -130,6 +161,10 @@ def client_fn(context: Context) -> Client:
     data_dir = context.node_config.get(
         "data-dir",
         context.run_config.get("data.data-dir", "/data"),
+    )
+    metrics_dir = context.node_config.get(
+        "metrics-dir",
+        context.run_config.get("train.metrics-dir"),
     )
 
     logger.info("Initialising client for machine type: %s", machine_type)
@@ -182,6 +217,7 @@ def client_fn(context: Context) -> Client:
         device,
         local_epochs,
         machine_type,
+        metrics_dir,
     ).to_client()
 
 

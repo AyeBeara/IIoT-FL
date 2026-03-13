@@ -5,8 +5,9 @@ logs/
 .env
 .vscode/
 
+data/
 data/*
 !data/.gitkeep
 wandb/
-
-quickstart-pytorch/*
+metrics/
+metrics/*

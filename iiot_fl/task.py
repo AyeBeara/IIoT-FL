@@ -1,4 +1,7 @@
+import csv
 import logging
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Dict, Tuple
 
 import torch
@@ -8,6 +11,67 @@ from torch.utils.data import DataLoader
 from iiot_fl.model import IIoTFLNet, DualTaskLoss
 
 logger = logging.getLogger(__name__)
+
+CSV_COLUMNS = [
+    "timestamp",
+    "round",
+    "phase",
+    "machine_type",
+    "num_samples",
+    "loss",
+    "avg_loss",
+    "avg_rul_loss",
+    "avg_fail_loss",
+    "rul_mae_log",
+    "fail_accuracy",
+    "fail_f1",
+    "fail_precision",
+    "fail_recall",
+]
+
+
+def append_metrics_to_csv(
+    metrics_dir: str | None,
+    machine_type: str,
+    phase: str,
+    round_num: int,
+    num_samples: int,
+    loss: float,
+    metrics: Dict[str, float],
+) -> None:
+    if not metrics_dir:
+        return
+
+    try:
+        out_dir = Path(metrics_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        file_path = out_dir / f"{machine_type}.csv"
+
+        row = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "round": round_num,
+            "phase": phase,
+            "machine_type": machine_type,
+            "num_samples": num_samples,
+            "loss": loss,
+            "avg_loss": metrics.get("avg_loss", ""),
+            "avg_rul_loss": metrics.get("avg_rul_loss", ""),
+            "avg_fail_loss": metrics.get("avg_fail_loss", ""),
+            "rul_mae_log": metrics.get("rul_mae_log", ""),
+            "fail_accuracy": metrics.get("fail_accuracy", ""),
+            "fail_f1": metrics.get("fail_f1", ""),
+            "fail_precision": metrics.get("fail_precision", ""),
+            "fail_recall": metrics.get("fail_recall", ""),
+        }
+
+        write_header = not file_path.exists()
+        with file_path.open("a", newline="") as csv_file:
+            writer = csv.DictWriter(csv_file, fieldnames=CSV_COLUMNS)
+            if write_header:
+                writer.writeheader()
+            writer.writerow(row)
+    except Exception:
+        logger.exception("Failed to append metrics CSV for machine '%s'", machine_type)
 
 
 def get_parameters(model: nn.Module) -> list:
@@ -105,6 +169,9 @@ def evaluate(
             rul_pred, fail_logit = model(x)
             loss, _, _ = criterion(rul_pred, rul_true, fail_logit, fail_true)
 
+            batch_n = len(rul_true)
+            total_loss += loss.item() * batch_n
+
             rul_mae += (
                 torch.abs(torch.log1p(rul_pred.squeeze()) - torch.log1p(rul_true))
                 .sum()
@@ -117,7 +184,7 @@ def evaluate(
             fp += ((preds == 1) & (gt == 0)).sum().item()
             tn += ((preds == 0) & (gt == 0)).sum().item()
             fn += ((preds == 0) & (gt == 1)).sum().item()
-            n += len(rul_true)
+            n += batch_n
 
     precision = tp / max(tp + fp, 1)
     recall = tp / max(tp + fn, 1)
